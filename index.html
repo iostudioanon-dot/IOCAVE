@@ -264,7 +264,11 @@
       position: absolute;
       inset: 0;
       z-index: 21;
-      display: grid;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(18px, 3vw, 34px);
       place-items: center;
       background:
         linear-gradient(90deg, rgba(255, 50, 0, 0.025), rgba(255, 150, 40, 0.025)),
@@ -298,6 +302,31 @@
         0 0 34px rgba(255, 31, 31, 0.18);
     }
 
+    .portfolio-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: min(270px, 72vw);
+      padding: 15px 28px 13px;
+      border: 1px solid rgba(255, 255, 255, 0.42);
+      border-left: 0;
+      border-right: 0;
+      color: rgba(255, 255, 255, 0.88);
+      font-size: clamp(13px, 1.35vw, 20px);
+      letter-spacing: 0.12em;
+      text-decoration: none;
+      text-transform: uppercase;
+      text-shadow: 0 0 18px rgba(255, 255, 255, 0.18);
+      transition: color 220ms ease, border-color 220ms ease, opacity 220ms ease;
+    }
+
+    .portfolio-link:hover,
+    .portfolio-link:focus-visible {
+      border-color: rgba(255, 255, 255, 0.72);
+      color: #fff;
+      outline: none;
+    }
+
     @media (max-width: 760px) {
       .frame { height: 92vh; }
       .micro-title { font-size: 12px; max-width: 62vw; }
@@ -305,6 +334,7 @@
       .controls { left: auto; right: 17px; bottom: 70px; }
       .card { width: min(420px, 86vw); }
       .ending h2 { font-size: clamp(30px, 10vw, 56px); letter-spacing: 0.08em; }
+      .portfolio-link { min-width: min(220px, 74vw); font-size: 12px; }
     }
   </style>
 </head>
@@ -352,6 +382,7 @@
 
       <div class="ending" id="endingOverlay">
         <h2>EVOLUT<span class="io-accent">I/O</span>N</h2>
+        <a class="portfolio-link" href="https://iostudioanon-dot.github.io/POERTFOLI_O/">Portfolio</a>
       </div>
     </section>
   </main>
@@ -849,7 +880,7 @@
       drawing = false;
       setStatus('MEMORY STORED');
       endingOverlay.classList.add('show');
-      endingOverlay.style.pointerEvents = 'none';
+      endingOverlay.style.pointerEvents = 'auto';
       revealSignalMap();
       lowTone(90, 0.45, 0.04);
       setTimeout(() => lowTone(140, 0.42, 0.035), 180);
