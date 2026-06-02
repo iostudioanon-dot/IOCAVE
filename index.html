@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IO Cave Mark</title>
+
+  <style>
+    @font-face {
+      font-family: "Lemon Milk";
+      src: url("assets/LEMONMILK-Bold.otf") format("opentype");
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    :root {
+      --black: #010100;
+      --ember: #ff7a1a;
+      --ember-hot: #ffd08a;
+      --ash: rgba(244, 214, 166, 0.82);
+      --ash-dim: rgba(244, 214, 166, 0.48);
+      --ui-line: rgba(255, 142, 48, 0.22);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      color: var(--ash);
+      font-family: "Lemon Milk", Arial, Helvetica, sans-serif;
+      font-weight: 700;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 50% 114%, rgba(255, 92, 12, 0.08), transparent 30%),
+        radial-gradient(circle at 14% 86%, rgba(255, 132, 28, 0.055), transparent 22%),
+        linear-gradient(180deg, #000 0%, #020100 54%, #000 100%);
+      pointer-events: none;
+    }
+
+    .app {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: clamp(10px, 2vw, 22px);
+      background: #000;
+    }
+
+    .frame {
+      position: relative;
+      width: min(1180px, 97vw);
+      height: min(760px, 92vh);
+      overflow: hidden;
+      cursor: none;
+      touch-action: none;
+      background: #040201;
+      border: 1px solid rgba(255, 152, 63, 0.14);
+      box-shadow:
+        0 0 90px rgba(0, 0, 0, 1),
+        inset 0 0 160px rgba(0, 0, 0, 0.96);
+      isolation: isolate;
+    }
+
+    canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    #wallCanvas { z-index: 1; }
+    #symbolCanvas { z-index: 2; }
+    #drawCanvas { z-index: 3; }
+    #fxCanvas { z-index: 4; pointer-events: none; }
+    #lightCanvas { z-index: 5; pointer-events: none; mix-blend-mode: screen; }
+    #darkCanvas { z-index: 6; pointer-events: none; }
+    #smokeCanvas { z-index: 7; pointer-events: none; opacity: 0.18; }
+    #uiCanvas { z-index: 8; pointer-events: none; }
+
+    .ui-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 9;
+      pointer-events: none;
+    }
+
+    .ui-layer .controls,
+    .ui-layer button {
+      pointer-events: auto;
+    }
+
+    .micro-title {
+      position: absolute;
+      left: 18px;
+      top: 16px;
+      display: grid;
+      gap: 4px;
+      font-size: clamp(9px, 0.78vw, 12px);
+      line-height: 1.45;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(244, 214, 166, 0.38);
+      text-shadow: 0 0 14px rgba(0, 0, 0, 0.92);
+    }
+
+    .hint {
+      position: absolute;
+      left: 18px;
+      bottom: 18px;
+      max-width: min(440px, 70vw);
+      font-size: clamp(9px, 0.8vw, 12px);
+      line-height: 1.6;
+      letter-spacing: 0.22em;
+      color: rgba(244, 214, 166, 0.36);
+      text-transform: uppercase;
+      text-shadow: 0 0 12px rgba(0, 0, 0, 0.96);
+      white-space: pre-line;
+    }
+
+    .controls {
+      position: absolute;
+      right: 17px;
+      bottom: 17px;
+      display: flex;
+      gap: 8px;
+      pointer-events: auto;
+      z-index: 30;
+    }
+
+    button {
+      border: 1px solid rgba(244, 214, 166, 0.22);
+      background: rgba(7, 3, 1, 0.24);
+      color: rgba(255, 225, 178, 0.58);
+      padding: 8px 11px;
+      font-size: 9px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 700;
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    button:hover,
+    button:focus-visible {
+      background: rgba(255, 120, 34, 0.055);
+      border-color: rgba(255, 160, 80, 0.34);
+      color: rgba(255, 225, 178, 0.76);
+      outline: none;
+    }
+
+    .stick {
+      position: absolute;
+      z-index: 12;
+      width: 96px;
+      height: 10px;
+      pointer-events: none;
+      display: none;
+      transform-origin: 100% 50%;
+      transform: translate(-100%, -50%) rotate(-27deg);
+      border-radius: 999px;
+      background: linear-gradient(90deg, #080301, #3b1607 50%, #140603);
+      box-shadow: 0 0 16px rgba(0, 0, 0, 0.92);
+    }
+
+    .stick::after {
+      content: "";
+      position: absolute;
+      right: -7px;
+      top: 1px;
+      width: 16px;
+      height: 8px;
+      border-radius: 50%;
+      background: #010100;
+      box-shadow:
+        0 0 8px rgba(0, 0, 0, 1),
+        0 0 15px rgba(255, 91, 12, 0.32);
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 20;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      background:
+        radial-gradient(circle at 50% 58%, rgba(255, 105, 12, 0.055), transparent 34%),
+        rgba(0, 0, 0, 0.28);
+      transition: opacity 550ms ease;
+    }
+
+    .overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .card {
+      width: min(560px, 86vw);
+      padding: 28px 24px;
+      background: rgba(5, 2, 1, 0.18);
+      border: 1px solid rgba(244, 214, 166, 0.06);
+      box-shadow: none;
+    }
+
+    .card h1 {
+      margin: 0 0 12px;
+      font-size: clamp(42px, 8vw, 96px);
+      line-height: 0.95;
+      letter-spacing: 0.11em;
+      color: rgba(255, 215, 160, 0.9);
+      text-shadow: 0 0 34px rgba(255, 94, 10, 0.22);
+    }
+
+    .card p {
+      margin: 0 0 22px;
+      color: rgba(244, 214, 166, 0.42);
+      font-size: clamp(10px, 0.9vw, 13px);
+      line-height: 1.75;
+      text-transform: uppercase;
+      letter-spacing: 0.22em;
+    }
+
+    .ending {
+      position: absolute;
+      inset: 0;
+      z-index: 21;
+      display: grid;
+      place-items: center;
+      background:
+        linear-gradient(90deg, rgba(255, 50, 0, 0.025), rgba(255, 150, 40, 0.025)),
+        rgba(0, 0, 0, 0.44);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 1200ms ease;
+    }
+
+    .ending.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .ending h2 {
+      margin: 0;
+      font-size: clamp(28px, 4.8vw, 70px);
+      line-height: 1.34;
+      letter-spacing: 0.16em;
+      color: rgba(255, 212, 155, 0.86);
+      text-shadow:
+        0 0 18px rgba(255, 116, 24, 0.36),
+        0 0 62px rgba(255, 57, 8, 0.18);
+      white-space: pre-line;
+    }
+
+    @media (max-width: 760px) {
+      .frame { height: 92vh; }
+      .micro-title { font-size: 8px; max-width: 62vw; }
+      .hint { max-width: 78vw; font-size: 9px; }
+      .controls { left: auto; right: 17px; bottom: 70px; }
+      .card { width: min(420px, 86vw); }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="app">
+    <section class="frame" id="frame" aria-label="Interactive cave wall drawing surface for marking primitive I/O">
+      <canvas id="wallCanvas" aria-hidden="true"></canvas>
+      <canvas id="symbolCanvas" aria-hidden="true"></canvas>
+      <canvas id="drawCanvas" aria-hidden="true"></canvas>
+      <canvas id="fxCanvas" aria-hidden="true"></canvas>
+      <canvas id="lightCanvas" aria-hidden="true"></canvas>
+      <canvas id="darkCanvas" aria-hidden="true"></canvas>
+      <canvas id="smokeCanvas" aria-hidden="true"></canvas>
+      <canvas id="uiCanvas" aria-hidden="true"></canvas>
+
+      <div class="ui-layer">
+        <div class="micro-title" aria-label="I/O Cave Mark metadata">
+          <span>I/O CAVE MARK</span>
+          <span>EST. 170,000 BCE</span>
+          <span>INPUT: CHARCOAL</span>
+          <span>OUTPUT: MEMORY</span>
+        </div>
+
+        <div class="hint" id="hint">
+          SURFACE: LIMESTONE
+          PROCESS: CONTACT
+          STATUS: AWAITING INPUT
+        </div>
+
+        <div class="controls">
+          <button id="resetBtn">Reset</button>
+        </div>
+      </div>
+
+      <div class="stick" id="stick"></div>
+
+      <div class="overlay" id="startOverlay">
+        <div class="card">
+          <h1>MARK THE WALL.</h1>
+          <p>INPUT DEVICE: CHARCOAL</p>
+          <button id="beginBtn">Begin</button>
+        </div>
+      </div>
+
+      <div class="ending" id="endingOverlay">
+        <h2>OUTPUT RECORDED
+MEMORY STORED
+
+≈170,000 BCE</h2>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const frame = document.getElementById('frame');
+    const wallCanvas = document.getElementById('wallCanvas');
+    const symbolCanvas = document.getElementById('symbolCanvas');
+    const drawCanvas = document.getElementById('drawCanvas');
+    const fxCanvas = document.getElementById('fxCanvas');
+    const lightCanvas = document.getElementById('lightCanvas');
+    const darkCanvas = document.getElementById('darkCanvas');
+    const smokeCanvas = document.getElementById('smokeCanvas');
+    const uiCanvas = document.getElementById('uiCanvas');
+
+    const wallCtx = wallCanvas.getContext('2d');
+    const symbolCtx = symbolCanvas.getContext('2d');
+    const drawCtx = drawCanvas.getContext('2d');
+    const fxCtx = fxCanvas.getContext('2d');
+    const lightCtx = lightCanvas.getContext('2d');
+    const darkCtx = darkCanvas.getContext('2d');
+    const smokeCtx = smokeCanvas.getContext('2d');
+    const uiCtx = uiCanvas.getContext('2d');
+
+    const startOverlay = document.getElementById('startOverlay');
+    const endingOverlay = document.getElementById('endingOverlay');
+    const beginBtn = document.getElementById('beginBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const hint = document.getElementById('hint');
+    const stick = document.getElementById('stick');
+
+    let dpr = Math.min(window.devicePixelRatio || 1, 2);
+    let active = false;
+    let drawing = false;
+    let complete = false;
+    let idleFrames = 0;
+    let damage = 0;
+    let nearHits = 0;
+    const I_SECTIONS = 10;
+    const SLASH_SECTIONS = 10;
+    const O_SECTIONS = 12;
+    const REQUIRED_COVERAGE = 0.5;
+    const O_REQUIRED_COVERAGE = 10 / O_SECTIONS;
+    const COMPLETION_REVEAL_DELAY = 3200;
+    let audio = null;
+
+    let pointer = { x: 150, y: 420, px: 150, py: 420, pressure: 0.5 };
+    const STICK_LENGTH = 96;
+    let last = { x: 0, y: 0 };
+    let path = [];
+    let smoke = [];
+    let embers = [];
+    let drips = [];
+    let completionTimer = null;
+
+    const state = { i: false, slash: false, o: false };
+    let coverage = {
+      i: new Set(),
+      slash: new Set(),
+      o: new Set()
+    };
+
+    function rect() {
+      return frame.getBoundingClientRect();
+    }
+
+    function resize() {
+      const box = rect();
+      const canvases = [wallCanvas, symbolCanvas, drawCanvas, fxCanvas, lightCanvas, darkCanvas, smokeCanvas, uiCanvas];
+      const contexts = [wallCtx, symbolCtx, drawCtx, fxCtx, lightCtx, darkCtx, smokeCtx, uiCtx];
+
+      canvases.forEach(canvas => {
+        canvas.width = Math.floor(box.width * dpr);
+        canvas.height = Math.floor(box.height * dpr);
+        canvas.style.width = box.width + 'px';
+        canvas.style.height = box.height + 'px';
+      });
+
+      contexts.forEach(ctx => ctx.setTransform(dpr, 0, 0, dpr, 0, 0));
+      generateWall();
+      drawTargetSymbols();
+      redrawUserMarks();
+    }
+
+    function generateWall() {
+      const w = frame.clientWidth;
+      const h = frame.clientHeight;
+      wallCtx.clearRect(0, 0, w, h);
+
+      const base = wallCtx.createRadialGradient(w * 0.48, h * 0.52, 20, w * 0.5, h * 0.5, w * 0.88);
+      base.addColorStop(0, '#301b0e');
+      base.addColorStop(0.34, '#170c07');
+      base.addColorStop(0.72, '#080402');
+      base.addColorStop(1, '#020100');
+      wallCtx.fillStyle = base;
+      wallCtx.fillRect(0, 0, w, h);
+
+      const mineral = wallCtx.createLinearGradient(0, 0, w, h);
+      mineral.addColorStop(0, 'rgba(255, 184, 110, 0.08)');
+      mineral.addColorStop(0.48, 'rgba(90, 22, 8, 0.07)');
+      mineral.addColorStop(1, 'rgba(255, 215, 156, 0.04)');
+      wallCtx.fillStyle = mineral;
+      wallCtx.fillRect(0, 0, w, h);
+
+      for (let i = 0; i < 2800; i++) {
+        const a = Math.random() * 0.065;
+        wallCtx.fillStyle = Math.random() > 0.54
+          ? `rgba(255, 205, 142, ${a})`
+          : `rgba(0, 0, 0, ${a})`;
+        wallCtx.fillRect(Math.random() * w, Math.random() * h, Math.random() * 3.2, Math.random() * 3.2);
+      }
+
+      for (let i = 0; i < 180; i++) {
+        wallCtx.strokeStyle = `rgba(255, 218, 166, ${0.006 + Math.random() * 0.018})`;
+        wallCtx.lineWidth = 0.5;
+        wallCtx.beginPath();
+        const x = Math.random() * w;
+        const y = Math.random() * h;
+        wallCtx.moveTo(x, y);
+        wallCtx.lineTo(x + 14 + Math.random() * 46, y + Math.random() * 10 - 5);
+        wallCtx.stroke();
+      }
+
+      for (let i = 0; i < 12; i++) {
+        wallCtx.beginPath();
+        wallCtx.ellipse(
+          Math.random() * w,
+          Math.random() * h,
+          80 + Math.random() * 230,
+          18 + Math.random() * 74,
+          Math.random() * Math.PI,
+          0,
+          Math.PI * 2
+        );
+        wallCtx.fillStyle = `rgba(255, 196, 120, ${0.02 + Math.random() * 0.05})`;
+        wallCtx.fill();
+      }
+
+      for (let i = 0; i < 38; i++) {
+        drawCrack(Math.random() * w, Math.random() * h, 60 + Math.random() * 180, Math.random() * Math.PI * 2);
+      }
+    }
+
+    function drawCrack(x, y, length, angle) {
+      wallCtx.strokeStyle = 'rgba(0, 0, 0, 0.36)';
+      wallCtx.lineWidth = 0.8 + Math.random() * 1.4;
+      wallCtx.beginPath();
+      wallCtx.moveTo(x, y);
+      for (let i = 0; i < 8; i++) {
+        x += Math.cos(angle + (Math.random() - 0.5) * 0.7) * (length / 8);
+        y += Math.sin(angle + (Math.random() - 0.5) * 0.7) * (length / 8);
+        wallCtx.lineTo(x, y);
+      }
+      wallCtx.stroke();
+    }
+
+    function drawTargetSymbols() {
+      const w = frame.clientWidth;
+      const h = frame.clientHeight;
+      symbolCtx.clearRect(0, 0, w, h);
+
+      drawSootHalo(w * 0.25, h * 0.5, w * 0.15, h * 0.37);
+      drawSootHalo(w * 0.485, h * 0.5, w * 0.13, h * 0.36);
+      drawSootHalo(w * 0.72, h * 0.52, w * 0.20, h * 0.37);
+
+      symbolCtx.save();
+      symbolCtx.globalCompositeOperation = 'screen';
+      drawPrimitiveI(w, h, 0.205);
+      drawPrimitiveSlash(w, h, 0.195);
+      drawPrimitiveO(w, h, 0.215);
+      symbolCtx.restore();
+
+      symbolCtx.save();
+      symbolCtx.globalCompositeOperation = 'multiply';
+      for (let i = 0; i < 900; i++) {
+        symbolCtx.fillStyle = `rgba(0,0,0,${Math.random() * 0.10})`;
+        symbolCtx.fillRect(Math.random() * w, Math.random() * h, Math.random() * 3.2, Math.random() * 3.2);
+      }
+      symbolCtx.restore();
+    }
+
+    function drawSootHalo(cx, cy, rx, ry) {
+      const g = symbolCtx.createRadialGradient(cx, cy, 14, cx, cy, Math.max(rx, ry));
+      g.addColorStop(0, 'rgba(255, 130, 45, 0.13)');
+      g.addColorStop(0.34, 'rgba(120, 30, 8, 0.13)');
+      g.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      symbolCtx.fillStyle = g;
+      symbolCtx.beginPath();
+      symbolCtx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+      symbolCtx.fill();
+    }
+
+    function drawPrimitiveI(w, h, alpha) {
+      symbolCtx.lineCap = 'round';
+      symbolCtx.lineJoin = 'round';
+      symbolCtx.strokeStyle = `rgba(255, 166, 78, ${alpha})`;
+      symbolCtx.lineWidth = Math.max(22, w * 0.027);
+      symbolCtx.shadowColor = 'rgba(255, 102, 18, 0.28)';
+      symbolCtx.shadowBlur = 36;
+      symbolCtx.beginPath();
+      symbolCtx.moveTo(w * 0.25, h * 0.235);
+      symbolCtx.bezierCurveTo(w * 0.232, h * 0.37, w * 0.268, h * 0.55, w * 0.248, h * 0.79);
+      symbolCtx.stroke();
+
+      symbolCtx.lineWidth = Math.max(6, w * 0.008);
+      symbolCtx.strokeStyle = `rgba(255, 222, 160, ${alpha * 0.75})`;
+      symbolCtx.beginPath();
+      symbolCtx.moveTo(w * 0.229, h * 0.238);
+      symbolCtx.lineTo(w * 0.272, h * 0.232);
+      symbolCtx.moveTo(w * 0.226, h * 0.792);
+      symbolCtx.lineTo(w * 0.272, h * 0.781);
+      symbolCtx.stroke();
+    }
+
+    function drawPrimitiveSlash(w, h, alpha) {
+      symbolCtx.lineCap = 'round';
+      symbolCtx.lineJoin = 'round';
+      symbolCtx.strokeStyle = `rgba(255, 146, 55, ${alpha})`;
+      symbolCtx.lineWidth = Math.max(21, w * 0.024);
+      symbolCtx.shadowColor = 'rgba(255, 70, 10, 0.26)';
+      symbolCtx.shadowBlur = 34;
+      symbolCtx.beginPath();
+      symbolCtx.moveTo(w * 0.54, h * 0.23);
+      symbolCtx.bezierCurveTo(w * 0.508, h * 0.40, w * 0.468, h * 0.56, w * 0.425, h * 0.79);
+      symbolCtx.stroke();
+    }
+
+    function drawPrimitiveO(w, h, alpha) {
+      symbolCtx.lineCap = 'round';
+      symbolCtx.strokeStyle = `rgba(255, 170, 86, ${alpha})`;
+      symbolCtx.lineWidth = Math.max(20, w * 0.023);
+      symbolCtx.shadowColor = 'rgba(255, 84, 10, 0.30)';
+      symbolCtx.shadowBlur = 40;
+      symbolCtx.beginPath();
+      for (let i = 0; i <= 96; i++) {
+        const t = (i / 96) * Math.PI * 2;
+        const wobble = 1 + Math.sin(t * 3.2) * 0.04 + Math.cos(t * 5.1) * 0.025;
+        const x = w * 0.72 + Math.cos(t) * w * 0.13 * wobble;
+        const y = h * 0.52 + Math.sin(t) * h * 0.265 * wobble;
+        if (i === 0) symbolCtx.moveTo(x, y);
+        else symbolCtx.lineTo(x, y);
+      }
+      symbolCtx.stroke();
+    }
+
+    function getPos(e) {
+      const b = rect();
+      return { x: e.clientX - b.left, y: e.clientY - b.top, pressure: e.pressure || 0.5 };
+    }
+
+    function initAudio() {
+      if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)();
+      if (audio.state === 'suspended') audio.resume();
+    }
+
+    function begin() {
+      initAudio();
+      active = true;
+      complete = false;
+      drawing = false;
+      damage = 0;
+      nearHits = 0;
+      idleFrames = 0;
+      clearCompletionTimer();
+      resetCoverage();
+      startOverlay.classList.add('hidden');
+      endingOverlay.classList.remove('show');
+      endingOverlay.style.pointerEvents = 'none';
+      setStatus('AWAITING INPUT');
+    }
+
+    function reset() {
+      active = true;
+      complete = false;
+      drawing = false;
+      damage = 0;
+      nearHits = 0;
+      idleFrames = 0;
+      clearCompletionTimer();
+      path = [];
+      drips = [];
+      state.i = false;
+      state.slash = false;
+      state.o = false;
+      resetCoverage();
+      drawCtx.clearRect(0, 0, frame.clientWidth, frame.clientHeight);
+      fxCtx.clearRect(0, 0, frame.clientWidth, frame.clientHeight);
+      endingOverlay.classList.remove('show');
+      endingOverlay.style.pointerEvents = 'none';
+      setStatus('AWAITING INPUT');
+      drawTargetSymbols();
+    }
+
+    function resetCoverage() {
+      coverage = {
+        i: new Set(),
+        slash: new Set(),
+        o: new Set()
+      };
+    }
+
+    function percent(set, total) {
+      return set.size / total;
+    }
+
+    function setStatus(status) {
+      hint.textContent = `SURFACE: LIMESTONE\nPROCESS: CONTACT\nSTATUS: ${status}`;
+    }
+
+    function clearCompletionTimer() {
+      if (!completionTimer) return;
+      clearTimeout(completionTimer);
+      completionTimer = null;
+    }
+
+    function noiseScratch(speed = 1) {
+      if (!audio) return;
+      const len = audio.sampleRate * 0.045;
+      const buffer = audio.createBuffer(1, len, audio.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2) * speed;
+      const src = audio.createBufferSource();
+      const filter = audio.createBiquadFilter();
+      const gain = audio.createGain();
+      src.buffer = buffer;
+      filter.type = 'bandpass';
+      filter.frequency.value = 280 + speed * 850;
+      gain.gain.value = 0.024;
+      src.connect(filter);
+      filter.connect(gain);
+      gain.connect(audio.destination);
+      src.start();
+    }
+
+    function lowTone(freq = 60, dur = 0.2, gainVal = 0.025) {
+      if (!audio) return;
+      const osc = audio.createOscillator();
+      const gain = audio.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.001, audio.currentTime);
+      gain.gain.exponentialRampToValueAtTime(gainVal, audio.currentTime + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + dur);
+      osc.connect(gain);
+      gain.connect(audio.destination);
+      osc.start();
+      osc.stop(audio.currentTime + dur);
+    }
+
+    function drawUserMark(a, b) {
+      const speed = Math.hypot(b.x - a.x, b.y - a.y);
+      const pressure = b.pressure || 0.5;
+      const width = 15 + Math.min(speed * 0.12, 10) + pressure * 9;
+
+      drawCtx.save();
+      drawCtx.lineCap = 'round';
+      drawCtx.lineJoin = 'round';
+      drawCtx.shadowColor = 'rgba(0,0,0,0.9)';
+      drawCtx.shadowBlur = 5;
+      drawCtx.strokeStyle = `rgba(${3 + Math.random() * 8}, ${2 + Math.random() * 5}, ${1}, 0.99)`;
+      drawCtx.lineWidth = width;
+      drawCtx.beginPath();
+      drawCtx.moveTo(a.x, a.y);
+      drawCtx.lineTo(b.x, b.y);
+      drawCtx.stroke();
+
+      drawCtx.globalCompositeOperation = 'screen';
+      drawCtx.strokeStyle = `rgba(255, ${128 + Math.random() * 36}, ${45 + Math.random() * 40}, 0.26)`;
+      drawCtx.lineWidth = Math.max(3, width * 0.2);
+      drawCtx.beginPath();
+      drawCtx.moveTo(a.x + Math.random() * 3 - 1.5, a.y + Math.random() * 3 - 1.5);
+      drawCtx.lineTo(b.x + Math.random() * 3 - 1.5, b.y + Math.random() * 3 - 1.5);
+      drawCtx.stroke();
+
+      drawCtx.globalCompositeOperation = 'source-over';
+      for (let i = 0; i < 8; i++) {
+        drawCtx.fillStyle = `rgba(0, 0, 0, ${Math.random() * 0.25})`;
+        drawCtx.beginPath();
+        drawCtx.arc(b.x + Math.random() * 26 - 13, b.y + Math.random() * 26 - 13, Math.random() * 3.3, 0, Math.PI * 2);
+        drawCtx.fill();
+      }
+      drawCtx.restore();
+
+      if (speed > 16 && Math.random() > 0.77) drips.push({ x: b.x, y: b.y, life: 1, vy: 0.15 + Math.random() * 0.35 });
+      if (Math.random() > 0.82) noiseScratch(Math.min(speed / 20, 1.8));
+    }
+
+    function redrawUserMarks() {
+      drawCtx.clearRect(0, 0, frame.clientWidth, frame.clientHeight);
+      for (let i = 1; i < path.length; i++) {
+        if (path[i].break || path[i - 1].break) continue;
+        drawUserMark(path[i - 1], path[i]);
+      }
+    }
+
+    function scoreGesture() {
+      const w = frame.clientWidth;
+      const h = frame.clientHeight;
+
+      for (const p of path) {
+        if (p.break) continue;
+        markCoverage(p, w, h);
+      }
+
+      const iProgress = percent(coverage.i, I_SECTIONS);
+      const slashProgress = percent(coverage.slash, SLASH_SECTIONS);
+      const oProgress = percent(coverage.o, O_SECTIONS);
+
+      state.i = iProgress >= REQUIRED_COVERAGE;
+      state.slash = slashProgress >= REQUIRED_COVERAGE;
+      state.o = oProgress >= O_REQUIRED_COVERAGE;
+      damage = 0;
+
+      if (active) {
+        if (!state.i) {
+          setStatus('MARKING I');
+        } else if (!state.slash) {
+          setStatus('MARKING SLASH');
+        } else if (!state.o) {
+          setStatus('MARKING O');
+        } else {
+          setStatus('OUTPUT FORMING');
+        }
+      }
+
+      if (state.i && state.slash && state.o && active && !complete) scheduleFinish();
+    }
+
+    function scheduleFinish() {
+      if (completionTimer) return;
+      completionTimer = setTimeout(() => {
+        completionTimer = null;
+        if (state.i && state.slash && state.o && active && !complete) finish();
+      }, COMPLETION_REVEAL_DELAY);
+    }
+
+    function markCoverage(p, w, h) {
+      markICoverage(p, w, h);
+      markSlashCoverage(p, w, h);
+      markOCoverage(p, w, h);
+    }
+
+    function markICoverage(p, w, h) {
+      const left = w * 0.10;
+      const right = w * 0.42;
+      const top = h * 0.18;
+      const bottom = h * 0.84;
+
+      if (p.x < left || p.x > right || p.y < top || p.y > bottom) return;
+
+      const section = Math.floor(((p.y - top) / (bottom - top)) * I_SECTIONS);
+      coverage.i.add(Math.max(0, Math.min(I_SECTIONS - 1, section)));
+    }
+
+    function markSlashCoverage(p, w, h) {
+      const top = h * 0.18;
+      const bottom = h * 0.84;
+      const startX = w * 0.56;
+      const endX = w * 0.39;
+      const tolerance = w * 0.16;
+
+      if (p.y < top || p.y > bottom) return;
+
+      const t = (p.y - top) / (bottom - top);
+      const expectedX = startX + (endX - startX) * t;
+
+      if (Math.abs(p.x - expectedX) > tolerance) return;
+
+      const section = Math.floor(t * SLASH_SECTIONS);
+      coverage.slash.add(Math.max(0, Math.min(SLASH_SECTIONS - 1, section)));
+    }
+
+    function markOCoverage(p, w, h) {
+      const cx = w * 0.72;
+      const cy = h * 0.52;
+      const rx = w * 0.22;
+      const ry = h * 0.37;
+      const dx = (p.x - cx) / rx;
+      const dy = (p.y - cy) / ry;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist < 0.54 || dist > 1.48) return;
+
+      let angle = Math.atan2(dy, dx);
+      if (angle < 0) angle += Math.PI * 2;
+
+      const section = Math.floor((angle / (Math.PI * 2)) * O_SECTIONS);
+      coverage.o.add(Math.max(0, Math.min(O_SECTIONS - 1, section)));
+    }
+
+    function finish() {
+      clearCompletionTimer();
+      active = true;
+      complete = true;
+      drawing = false;
+      setStatus('MEMORY STORED');
+      endingOverlay.classList.add('show');
+      endingOverlay.style.pointerEvents = 'none';
+      revealSignalMap();
+      lowTone(90, 0.45, 0.04);
+      setTimeout(() => lowTone(140, 0.42, 0.035), 180);
+      setTimeout(() => lowTone(210, 0.55, 0.03), 360);
+    }
+
+    function revealSignalMap() {
+      const w = frame.clientWidth;
+      const h = frame.clientHeight;
+      fxCtx.save();
+      fxCtx.globalCompositeOperation = 'screen';
+      for (let i = 0; i < 38; i++) {
+        const y = Math.random() * h;
+        fxCtx.strokeStyle = Math.random() > 0.5 ? 'rgba(255, 103, 18, 0.08)' : 'rgba(255, 190, 90, 0.055)';
+        fxCtx.lineWidth = 1;
+        fxCtx.beginPath();
+        fxCtx.moveTo(Math.random() * w * 0.18, y);
+        fxCtx.lineTo(w * 0.82 + Math.random() * w * 0.18, y + Math.random() * 38 - 19);
+        fxCtx.stroke();
+      }
+      for (let i = 0; i < 12; i++) {
+        fxCtx.strokeStyle = 'rgba(255, 130, 44, 0.055)';
+        fxCtx.beginPath();
+        fxCtx.arc(w * (0.25 + Math.random() * 0.5), h * (0.25 + Math.random() * 0.5), 20 + Math.random() * 110, 0, Math.PI * 2);
+        fxCtx.stroke();
+      }
+      fxCtx.restore();
+    }
+
+    function updateParticles() {
+      const w = frame.clientWidth;
+      const h = frame.clientHeight;
+      if (!complete) fxCtx.clearRect(0, 0, w, h);
+
+      if (smoke.length < 36) {
+        smoke.push({ x: w * 0.08 + Math.random() * w * 0.2, y: h * 0.82 + Math.random() * h * 0.22, vx: 0.10 + Math.random() * 0.35, vy: -0.10 - Math.random() * 0.34, r: 30 + Math.random() * 74, life: 1 });
+      }
+      if (complete && embers.length < 18 && Math.random() > 0.88) {
+        embers.push({ x: Math.random() * w, y: Math.random() * h, vx: Math.random() * 0.16 - 0.08, vy: -0.08 - Math.random() * 0.22, r: 0.6 + Math.random() * 1.2, life: 0.5 });
+      }
+
+      smokeCtx.clearRect(0, 0, w, h);
+      smoke.forEach(p => {
+        p.x += p.vx; p.y += p.vy; p.life -= 0.0035;
+        smokeCtx.fillStyle = `rgba(120, 82, 58, ${Math.max(p.life, 0) * 0.055})`;
+        smokeCtx.beginPath(); smokeCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2); smokeCtx.fill();
+      });
+      smoke = smoke.filter(p => p.life > 0);
+
+      fxCtx.save();
+      fxCtx.globalCompositeOperation = 'screen';
+      embers.forEach(p => {
+        p.x += p.vx; p.y += p.vy; p.life -= 0.015;
+        fxCtx.fillStyle = `rgba(255, ${120 + Math.random() * 60}, 50, ${Math.max(p.life, 0) * 0.12})`;
+        fxCtx.beginPath(); fxCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2); fxCtx.fill();
+      });
+      fxCtx.restore();
+      embers = embers.filter(p => p.life > 0);
+
+      drips.forEach(p => {
+        p.y += p.vy; p.life -= 0.012;
+        drawCtx.fillStyle = `rgba(0,0,0,${Math.max(p.life, 0) * 0.18})`;
+        drawCtx.beginPath(); drawCtx.arc(p.x, p.y, 1.2 + Math.random() * 1.8, 0, Math.PI * 2); drawCtx.fill();
+      });
+      drips = drips.filter(p => p.life > 0);
+    }
+
+    function updateLight() {
+      const w = frame.clientWidth;
+      const h = frame.clientHeight;
+      const flicker = 0.90 + Math.random() * 0.22;
+      const idleDim = active ? Math.min(idleFrames / 750, 0.42) : 0;
+      const radius = (complete ? 540 : 410) * flicker * (1 - idleDim * 0.5);
+
+      lightCtx.clearRect(0, 0, w, h);
+      darkCtx.clearRect(0, 0, w, h);
+
+      const flame = lightCtx.createRadialGradient(pointer.x, pointer.y, 7, pointer.x, pointer.y, radius);
+      flame.addColorStop(0, 'rgba(255, 226, 156, 0.72)');
+      flame.addColorStop(0.13, 'rgba(255, 130, 34, 0.45)');
+      flame.addColorStop(0.42, 'rgba(140, 38, 10, 0.15)');
+      flame.addColorStop(0.76, 'rgba(30, 8, 2, 0.05)');
+      flame.addColorStop(1, 'rgba(0,0,0,0)');
+      lightCtx.fillStyle = flame;
+      lightCtx.fillRect(0, 0, w, h);
+
+      lightCtx.save();
+      lightCtx.globalCompositeOperation = 'screen';
+      const blueEdge = lightCtx.createRadialGradient(pointer.x + 18, pointer.y - 20, 12, pointer.x, pointer.y, radius * 0.62);
+      blueEdge.addColorStop(0, 'rgba(80, 135, 255, 0.06)');
+      blueEdge.addColorStop(1, 'rgba(0,0,0,0)');
+      lightCtx.fillStyle = blueEdge;
+      lightCtx.fillRect(0, 0, w, h);
+      lightCtx.restore();
+
+      darkCtx.fillStyle = 'rgba(0,0,0,0.72)';
+      darkCtx.fillRect(0, 0, w, h);
+      darkCtx.save();
+      darkCtx.globalCompositeOperation = 'destination-out';
+      const reveal = darkCtx.createRadialGradient(pointer.x, pointer.y, 65, pointer.x, pointer.y, radius * 1.12);
+      reveal.addColorStop(0, 'rgba(0,0,0,0.94)');
+      reveal.addColorStop(0.32, 'rgba(0,0,0,0.74)');
+      reveal.addColorStop(0.72, 'rgba(0,0,0,0.16)');
+      reveal.addColorStop(1, 'rgba(0,0,0,0)');
+      darkCtx.fillStyle = reveal;
+      darkCtx.fillRect(0, 0, w, h);
+      darkCtx.restore();
+
+      if (damage > 0.35) {
+        darkCtx.fillStyle = `rgba(55, 4, 0, ${damage * 0.20})`;
+        darkCtx.fillRect(0, 0, w, h);
+      }
+    }
+
+    function updateUIOverlay() {
+      const w = frame.clientWidth;
+      const h = frame.clientHeight;
+      uiCtx.clearRect(0, 0, w, h);
+      if (!complete && active) {
+        uiCtx.save();
+        uiCtx.globalCompositeOperation = 'screen';
+        const alpha = 0.014 + Math.sin(performance.now() * 0.0013) * 0.005;
+        uiCtx.strokeStyle = `rgba(255, 160, 68, ${alpha})`;
+        uiCtx.lineWidth = 1;
+        for (let x = 0; x < w; x += 42) {
+          uiCtx.beginPath(); uiCtx.moveTo(x, 0); uiCtx.lineTo(x + Math.sin(x) * 4, h); uiCtx.stroke();
+        }
+        for (let y = 0; y < h; y += 42) {
+          uiCtx.beginPath(); uiCtx.moveTo(0, y); uiCtx.lineTo(w, y + Math.cos(y) * 4); uiCtx.stroke();
+        }
+        uiCtx.restore();
+      }
+    }
+
+    function loop() {
+      idleFrames++;
+      updateParticles();
+      updateLight();
+      updateUIOverlay();
+      requestAnimationFrame(loop);
+    }
+
+    beginBtn.addEventListener('click', event => {
+      event.stopPropagation();
+      begin();
+    });
+
+    resetBtn.addEventListener('click', event => {
+      event.stopPropagation();
+      reset();
+    });
+
+    frame.addEventListener('pointerdown', e => {
+      if (e.target.closest && e.target.closest('button')) return;
+      if (!active) return;
+      frame.setPointerCapture(e.pointerId);
+      initAudio();
+      drawing = true;
+      last = getPos(e);
+      path.push({ ...last, break: true });
+      stick.style.display = 'block';
+      stick.style.left = last.x + 'px';
+      stick.style.top = last.y + 'px';
+      idleFrames = 0;
+      if (navigator.vibrate) navigator.vibrate(12);
+    });
+
+    frame.addEventListener('pointermove', e => {
+      const p = getPos(e);
+      pointer.px = pointer.x;
+      pointer.py = pointer.y;
+      pointer.x = p.x;
+      pointer.y = p.y;
+      pointer.pressure = p.pressure;
+      stick.style.display = 'block';
+      stick.style.left = pointer.x + 'px';
+      stick.style.top = pointer.y + 'px';
+
+      if (!drawing || !active) return;
+      idleFrames = 0;
+      drawUserMark(last, p);
+      path.push(p);
+      last = p;
+      if (!complete) scoreGesture();
+    });
+
+    frame.addEventListener('pointerup', () => {
+      drawing = false;
+    });
+    frame.addEventListener('pointercancel', () => { drawing = false; });
+
+    window.addEventListener('resize', resize);
+
+    resize();
+    loop();
+  </script>
+</body>
+</html>
