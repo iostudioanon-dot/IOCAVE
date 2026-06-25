@@ -21,6 +21,10 @@
       --ash: rgba(244, 214, 166, 0.82);
       --ash-dim: rgba(244, 214, 166, 0.48);
       --ui-line: rgba(255, 142, 48, 0.22);
+      --signal-red: #e0322b;
+      --portfolio-white: #f6f4ef;
+      --portfolio-muted: rgba(246, 244, 239, 0.58);
+      --portfolio-line: rgba(246, 244, 239, 0.14);
     }
 
     * { box-sizing: border-box; }
@@ -41,9 +45,9 @@
       position: fixed;
       inset: 0;
       background:
-        radial-gradient(circle at 50% 114%, rgba(255, 92, 12, 0.08), transparent 30%),
-        radial-gradient(circle at 14% 86%, rgba(255, 132, 28, 0.055), transparent 22%),
-        linear-gradient(180deg, #000 0%, #020100 54%, #000 100%);
+        radial-gradient(circle at 50% 114%, rgba(255, 92, 12, 0.045), transparent 30%),
+        radial-gradient(circle at 14% 86%, rgba(255, 132, 28, 0.032), transparent 22%),
+        linear-gradient(180deg, #000 0%, #010100 54%, #000 100%);
       pointer-events: none;
     }
 
@@ -65,10 +69,10 @@
       cursor: none;
       touch-action: none;
       background: #040201;
-      border: 1px solid rgba(255, 152, 63, 0.14);
+      border: 1px solid rgba(246, 244, 239, 0.10);
       box-shadow:
         0 0 90px rgba(0, 0, 0, 1),
-        inset 0 0 160px rgba(0, 0, 0, 0.96);
+        inset 0 0 170px rgba(0, 0, 0, 0.97);
       isolation: isolate;
     }
 
@@ -97,40 +101,176 @@
     }
 
     .ui-layer .controls,
-    .ui-layer button {
+    .ui-layer button,
+    .ui-layer a {
       pointer-events: auto;
     }
 
     .micro-title {
       position: absolute;
-      left: 18px;
+      left: 50%;
       top: 16px;
+      transform: translateX(-50%);
       font-size: clamp(14px, 1.25vw, 20px);
       line-height: 1;
       letter-spacing: 0.18em;
       text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.72);
+      color: rgba(246, 244, 239, 0.78);
       text-shadow: 0 0 14px rgba(0, 0, 0, 0.92);
+      text-align: center;
+      white-space: nowrap;
     }
 
-    .hint {
+    .project-navigation-shell {
       position: absolute;
-      left: 18px;
-      bottom: 18px;
-      max-width: min(440px, 70vw);
-      font-size: clamp(9px, 0.74vw, 11px);
-      line-height: 1.6;
-      letter-spacing: 0.22em;
-      color: rgba(255, 255, 255, 0.34);
+      inset: 0;
+      z-index: 32;
+      pointer-events: none;
+      color: var(--portfolio-white);
       text-transform: uppercase;
-      text-shadow: 0 0 12px rgba(0, 0, 0, 0.96);
-      white-space: pre-line;
+    }
+
+    .route-marker {
+      position: absolute;
+      max-width: min(340px, 38vw);
+      display: grid;
+      gap: 5px;
+      padding-top: 1px;
+      font-size: 10px;
+      line-height: 1.35;
+      letter-spacing: 0.18em;
+    }
+
+    .route-marker::before {
+      content: "";
+      width: 38px;
+      height: 1px;
+      background: rgba(224, 50, 43, 0.72);
+    }
+
+    .current-location {
+      left: 18px;
+      top: 18px;
+      text-align: left;
+    }
+
+    .archive-return {
+      right: 18px;
+      top: 18px;
+      align-items: end;
+      color: rgba(246, 244, 239, 0.74);
+      text-align: right;
+      text-decoration: none;
+      pointer-events: auto;
+      transition: color 180ms ease, transform 180ms ease;
+    }
+
+    .archive-return::before {
+      justify-self: end;
+    }
+
+    .route-meta {
+      color: var(--portfolio-muted);
+      font-size: 8px;
+      letter-spacing: 0.22em;
+    }
+
+    .route-title {
+      color: rgba(246, 244, 239, 0.88);
+    }
+
+    .archive-return:hover,
+    .archive-return:focus-visible {
+      color: var(--portfolio-white);
+      outline: none;
+      transform: translateX(-2px);
+    }
+
+    .archive-return:hover::before,
+    .archive-return:focus-visible::before {
+      background: var(--signal-red);
+    }
+
+    .next-intersection {
+      position: absolute;
+      left: 50%;
+      bottom: 18px;
+      width: min(460px, 78vw);
+      transform: translateX(-50%);
+      display: grid;
+      justify-items: center;
+      gap: 7px;
+      text-align: center;
+      pointer-events: auto;
+    }
+
+    .next-intersection::before {
+      content: "";
+      width: min(220px, 52vw);
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(246, 244, 239, 0.34), transparent);
+    }
+
+    .route-action {
+      min-width: min(330px, 72vw);
+      min-height: 42px;
+      padding: 12px 22px 10px;
+      border: 1px solid rgba(246, 244, 239, 0.42);
+      border-left: 0;
+      border-right: 0;
+      background: rgba(0, 0, 0, 0.40);
+      color: rgba(246, 244, 239, 0.9);
+      font-size: clamp(10px, 1vw, 13px);
+      line-height: 1.2;
+      letter-spacing: 0.16em;
+      text-align: center;
+      text-decoration: none;
+      transition: color 180ms ease, border-color 180ms ease, background 180ms ease, transform 180ms ease;
+    }
+
+    .route-action:hover,
+    .route-action:focus-visible {
+      border-color: rgba(224, 50, 43, 0.72);
+      background: rgba(224, 50, 43, 0.10);
+      color: var(--portfolio-white);
+      outline: none;
+      transform: translateY(-1px);
+    }
+
+    .route-action.is-static {
+      cursor: default;
+    }
+
+    .route-action.is-static:hover,
+    .route-action.is-static:focus-visible {
+      transform: none;
+    }
+
+    .route-secondary {
+      color: rgba(246, 244, 239, 0.48);
+      font-size: 8px;
+      line-height: 1.2;
+      letter-spacing: 0.2em;
+      text-decoration: none;
+      transition: color 180ms ease, transform 180ms ease;
+    }
+
+    .route-secondary:hover,
+    .route-secondary:focus-visible {
+      color: rgba(224, 50, 43, 0.9);
+      outline: none;
+      transform: translateY(-1px);
+    }
+
+    .micro-title .io-accent {
+      color: var(--signal-red);
+      text-shadow: none;
     }
 
     .controls {
       position: absolute;
-      right: 17px;
-      bottom: 17px;
+      right: 18px;
+      bottom: 18px;
       display: flex;
       gap: 8px;
       pointer-events: auto;
@@ -138,9 +278,9 @@
     }
 
     button {
-      border: 1px solid rgba(244, 214, 166, 0.22);
-      background: rgba(7, 3, 1, 0.24);
-      color: rgba(255, 255, 255, 0.58);
+      border: 1px solid rgba(246, 244, 239, 0.22);
+      background: rgba(0, 0, 0, 0.34);
+      color: rgba(246, 244, 239, 0.64);
       min-width: 44px;
       min-height: 44px;
       padding: 10px 14px;
@@ -156,9 +296,9 @@
 
     button:hover,
     button:focus-visible {
-      background: rgba(255, 120, 34, 0.055);
-      border-color: rgba(255, 31, 31, 0.45);
-      color: rgba(255, 255, 255, 0.78);
+      background: rgba(255, 255, 255, 0.045);
+      border-color: rgba(224, 50, 43, 0.56);
+      color: var(--portfolio-white);
       outline: none;
     }
 
@@ -198,8 +338,8 @@
       place-items: center;
       text-align: center;
       background:
-        radial-gradient(circle at 50% 58%, rgba(255, 105, 12, 0.055), transparent 34%),
-        rgba(0, 0, 0, 0.28);
+        radial-gradient(circle at 50% 58%, rgba(224, 50, 43, 0.035), transparent 32%),
+        linear-gradient(180deg, rgba(0, 0, 0, 0.36), rgba(0, 0, 0, 0.54));
       transition: opacity 550ms ease;
     }
 
@@ -209,23 +349,44 @@
     }
 
     .card {
-      width: min(620px, 86vw);
-      padding: 28px 24px;
-      background: rgba(5, 2, 1, 0.18);
-      border: 1px solid rgba(244, 214, 166, 0.06);
-      box-shadow: none;
+      width: min(680px, 88vw);
+      padding: clamp(26px, 4.2vw, 54px) clamp(22px, 4vw, 48px);
+      background:
+        linear-gradient(180deg, rgba(0, 0, 0, 0.62), rgba(4, 2, 1, 0.48)),
+        rgba(0, 0, 0, 0.42);
+      border: 1px solid var(--portfolio-line);
+      box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.72),
+        0 28px 80px rgba(0, 0, 0, 0.58);
+      backdrop-filter: blur(1px);
+    }
+
+    .module-label,
+    .signal-line {
+      display: block;
+      margin: 0 auto 18px;
+      color: var(--portfolio-muted);
+      font-size: clamp(9px, 0.82vw, 12px);
+      line-height: 1.4;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    .module-label .io-accent {
+      color: var(--signal-red);
+      text-shadow: none;
     }
 
     .card h1 {
-      margin: 0 0 12px;
-      font-size: clamp(20px, 3.3vw, 42px);
-      line-height: 1.16;
-      letter-spacing: 0.12em;
-      color: #fff;
+      margin: 0;
+      font-size: clamp(22px, 3.05vw, 38px);
+      line-height: 1.12;
+      letter-spacing: 0.105em;
+      color: var(--portfolio-white);
       text-align: center;
       text-shadow:
-        0 0 8px rgba(255, 255, 255, 0.24),
-        0 0 32px rgba(255, 255, 255, 0.10);
+        0 1px 0 rgba(255, 255, 255, 0.08),
+        0 0 16px rgba(255, 255, 255, 0.12);
     }
 
     .card .date-line {
@@ -238,7 +399,7 @@
 
     .card .headline-spacer {
       display: block;
-      height: 0.58em;
+      height: 0.64em;
     }
 
     .card .headline-line {
@@ -247,19 +408,54 @@
     }
 
     .card .io-accent {
-      color: #ff1f1f;
+      color: var(--signal-red);
       text-shadow:
-        0 0 10px rgba(255, 31, 31, 0.44),
-        0 0 34px rgba(255, 31, 31, 0.18);
+        0 0 8px rgba(224, 50, 43, 0.28),
+        0 0 24px rgba(224, 50, 43, 0.10);
     }
 
     .card p {
-      margin: 0 0 22px;
-      color: rgba(255, 255, 255, 0.38);
+      margin: 20px 0 24px;
+      color: rgba(246, 244, 239, 0.62);
       font-size: clamp(9px, 0.8vw, 11px);
       line-height: 1.75;
       text-transform: uppercase;
-      letter-spacing: 0.22em;
+      letter-spacing: 0.2em;
+    }
+
+    .card .signal-line {
+      margin-top: 20px;
+      margin-bottom: 0;
+      color: rgba(246, 244, 239, 0.46);
+      font-size: clamp(9px, 0.78vw, 11px);
+    }
+
+    #beginBtn {
+      min-width: 132px;
+      min-height: 48px;
+      padding: 13px 22px 12px;
+      border-color: rgba(246, 244, 239, 0.48);
+      color: var(--portfolio-white);
+      background: rgba(0, 0, 0, 0.48);
+      box-shadow: inset 0 -1px 0 rgba(224, 50, 43, 0.36);
+    }
+
+    #beginBtn:hover,
+    #beginBtn:focus-visible {
+      border-color: rgba(246, 244, 239, 0.78);
+      background: rgba(224, 50, 43, 0.12);
+      box-shadow: inset 0 -1px 0 rgba(224, 50, 43, 0.82);
+    }
+
+    #resetBtn {
+      opacity: 0.58;
+      border-color: rgba(246, 244, 239, 0.16);
+      background: rgba(0, 0, 0, 0.22);
+    }
+
+    #resetBtn:hover,
+    #resetBtn:focus-visible {
+      opacity: 0.88;
     }
 
     .ending {
@@ -329,14 +525,47 @@
       outline: none;
     }
 
+    @media (prefers-reduced-motion: reduce) {
+      .archive-return,
+      .route-action,
+      .route-secondary {
+        transition: none;
+      }
+    }
+
     @media (max-width: 760px) {
       .frame { height: 92vh; }
-      .micro-title { font-size: 12px; max-width: 62vw; }
-      .hint { max-width: 78vw; font-size: 9px; }
-      .controls { left: auto; right: 17px; bottom: 70px; }
-      .card { width: min(420px, 86vw); }
+      .micro-title { top: 52px; font-size: 12px; max-width: 86vw; }
+      .route-marker {
+        max-width: 48vw;
+        font-size: 8px;
+        letter-spacing: 0.14em;
+      }
+      .current-location { left: 13px; top: 13px; }
+      .archive-return { right: 13px; top: 13px; }
+      .next-intersection {
+        bottom: 12px;
+        width: min(380px, 86vw);
+      }
+      .route-action {
+        min-width: min(300px, 80vw);
+        font-size: 10px;
+        letter-spacing: 0.13em;
+      }
+      .controls { right: 13px; bottom: 122px; }
+      .card { width: min(430px, 88vw); padding: 28px 20px; }
+      .module-label { margin-bottom: 15px; }
+      .card h1 { font-size: clamp(16px, 4.8vw, 22px); letter-spacing: 0.045em; }
+      .card p { margin: 17px 0 20px; }
+      .card .signal-line { margin-top: 17px; }
       .ending h2 { font-size: clamp(30px, 10vw, 56px); letter-spacing: 0.08em; }
       .portfolio-link { min-width: min(220px, 74vw); font-size: 12px; }
+    }
+
+    @media (max-width: 390px) {
+      .card { width: 90vw; padding-inline: 16px; }
+      .card h1 { font-size: clamp(15px, 4.45vw, 18px); letter-spacing: 0.03em; }
+      #beginBtn { min-width: 124px; }
     }
   </style>
 </head>
@@ -354,13 +583,25 @@
       <canvas id="uiCanvas" aria-hidden="true"></canvas>
 
       <div class="ui-layer">
-        <div class="micro-title" aria-label="I/O Cave Mark title">I/O CAVE MARK</div>
+        <div class="micro-title" aria-label="I/O Cave Mark title"><span class="io-accent">I/O</span> CAVE MARK</div>
 
-        <div class="hint" id="hint">
-          SURFACE: LIMESTONE
-          PROCESS: CONTACT
-          STATUS: AWAITING INPUT
-        </div>
+        <nav class="project-navigation-shell" aria-label="I/O archive navigation">
+          <div class="route-marker current-location" aria-label="Current location">
+            <span class="route-meta" data-nav-current-section></span>
+            <span class="route-title" data-nav-current-page></span>
+          </div>
+
+          <a class="route-marker archive-return" data-nav-return href="">
+            <span class="route-meta">RETURN PATH</span>
+            <span class="route-title" data-nav-return-label></span>
+          </a>
+
+          <div class="next-intersection" aria-label="Next intersection">
+            <span class="route-meta">NEXT INTERSECTION</span>
+            <button class="route-action" id="routeActionBtn" type="button"></button>
+            <a class="route-secondary" data-nav-secondary href=""></a>
+          </div>
+        </nav>
 
         <div class="controls">
           <button id="resetBtn">Reset</button>
@@ -377,14 +618,15 @@
             <span class="headline-line">INPUT CHARCOAL</span>
             <span class="headline-line">OUTPUT EVOLUT<span class="io-accent">I/O</span>N</span>
           </h1>
+          <span class="signal-line">Gesture → Surface → Signal</span>
           <p>MARK THE WALL</p>
-          <button id="beginBtn">Begin</button>
+          <button id="beginBtn">ENTER I/O1</button>
         </div>
       </div>
 
       <div class="ending" id="endingOverlay">
         <h2>EVOLUT<span class="io-accent">I/O</span>N</h2>
-        <a class="portfolio-link" href="https://iostudioanon-dot.github.io/POERTFOLI_O/">Portfolio</a>
+        <a class="portfolio-link" data-nav-ending href="">CONTINUE TO TRANSITI/ON</a>
       </div>
     </section>
   </main>
@@ -413,8 +655,56 @@
     const endingOverlay = document.getElementById('endingOverlay');
     const beginBtn = document.getElementById('beginBtn');
     const resetBtn = document.getElementById('resetBtn');
+    const routeActionBtn = document.getElementById('routeActionBtn');
+    const navCurrentSection = document.querySelector('[data-nav-current-section]');
+    const navCurrentPage = document.querySelector('[data-nav-current-page]');
+    const navReturn = document.querySelector('[data-nav-return]');
+    const navReturnLabel = document.querySelector('[data-nav-return-label]');
+    const navSecondary = document.querySelector('[data-nav-secondary]');
+    const navEnding = document.querySelector('[data-nav-ending]');
     const hint = document.getElementById('hint');
     const stick = document.getElementById('stick');
+
+    const navigationRoute = {
+      currentPage: 'I/O CAVE MARK',
+      currentSection: 'I/O1 / ARCHIVE POSITION 001',
+      previousPage: 'TRANSITI/ON',
+      nextPage: 'TRANSITI/ON',
+      primaryAction: 'ENTER I/O1',
+      secondaryAction: 'RETURN TO ARCHIVE',
+      archiveUrl: 'https://iostudioanon-dot.github.io/POERTFOLI_O/',
+      transitionUrl: 'https://iostudioanon-dot.github.io/POERTFOLI_O/'
+    };
+
+    function renderNavigation(mode = 'entry') {
+      navCurrentSection.textContent = navigationRoute.currentSection;
+      navCurrentPage.textContent = navigationRoute.currentPage;
+      navReturn.href = navigationRoute.archiveUrl;
+      navReturnLabel.textContent = navigationRoute.secondaryAction;
+      navSecondary.href = navigationRoute.archiveUrl;
+      navSecondary.textContent = mode === 'complete'
+        ? 'RETURN TO ARCHIVE'
+        : `BACK TO ${navigationRoute.previousPage}`;
+      navEnding.href = navigationRoute.transitionUrl;
+
+      routeActionBtn.classList.toggle('is-static', mode === 'active');
+      routeActionBtn.disabled = false;
+
+      if (mode === 'complete') {
+        routeActionBtn.textContent = `CONTINUE TO ${navigationRoute.nextPage}`;
+        routeActionBtn.setAttribute('aria-label', `Continue to ${navigationRoute.nextPage}`);
+        return;
+      }
+
+      if (mode === 'active') {
+        routeActionBtn.textContent = 'CONTINUE: MARK THE WALL';
+        routeActionBtn.setAttribute('aria-label', 'Continue by marking the wall');
+        return;
+      }
+
+      routeActionBtn.textContent = navigationRoute.primaryAction;
+      routeActionBtn.setAttribute('aria-label', navigationRoute.primaryAction);
+    }
 
     let dpr = Math.min(window.devicePixelRatio || 1, 2);
     let active = false;
@@ -653,6 +943,7 @@
       startOverlay.classList.add('hidden');
       endingOverlay.classList.remove('show');
       endingOverlay.style.pointerEvents = 'none';
+      renderNavigation('active');
       setStatus('AWAITING INPUT');
     }
 
@@ -674,6 +965,7 @@
       fxCtx.clearRect(0, 0, frame.clientWidth, frame.clientHeight);
       endingOverlay.classList.remove('show');
       endingOverlay.style.pointerEvents = 'none';
+      renderNavigation('active');
       setStatus('AWAITING INPUT');
       drawTargetSymbols();
     }
@@ -691,6 +983,7 @@
     }
 
     function setStatus(status) {
+      if (!hint) return;
       hint.textContent = `SURFACE: LIMESTONE\nPROCESS: CONTACT\nSTATUS: ${status}`;
     }
 
@@ -883,6 +1176,7 @@
       setStatus('MEMORY STORED');
       endingOverlay.classList.add('show');
       endingOverlay.style.pointerEvents = 'auto';
+      renderNavigation('complete');
       revealSignalMap();
       lowTone(90, 0.45, 0.04);
       setTimeout(() => lowTone(140, 0.42, 0.035), 180);
@@ -1035,8 +1329,17 @@
       reset();
     });
 
+    routeActionBtn.addEventListener('click', event => {
+      event.stopPropagation();
+      if (complete) {
+        window.location.href = navigationRoute.transitionUrl;
+        return;
+      }
+      if (!active) begin();
+    });
+
     frame.addEventListener('pointerdown', e => {
-      if (e.target.closest && e.target.closest('button')) return;
+      if (e.target.closest && e.target.closest('button, a')) return;
       if (!active) return;
       frame.setPointerCapture(e.pointerId);
       initAudio();
@@ -1076,6 +1379,7 @@
 
     window.addEventListener('resize', resize);
 
+    renderNavigation('entry');
     resize();
     loop();
   </script>
